@@ -44,11 +44,7 @@ This package:
 
 1. Open **Unity → Edit → Project Settings → Package Manager**
 2. Click **Add package from git URL…**
-3. Enter:
-
-```
-https://github.com/yourcompany/serialize-reference-typefilter.git
-```
+3. Enter: [https://github.com/Ilya-ekb/SerializedReferencesFilter](https://github.com/Ilya-ekb/SerializedReferencesFilter)
 
 ---
 

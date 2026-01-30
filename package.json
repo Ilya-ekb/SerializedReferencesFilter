@@ -1,0 +1,21 @@
+{
+  "name": "com.oplayi.serializereference-typefilter",
+  "displayName": "SerializeReference Type Filter",
+  "version": "1.0.0",
+  "description": "Safe and production-ready Inspector UX for polymorphic [SerializeReference] fields. Provides searchable AddComponent-like dropdown, strict type filtering, and protection against unsupported UnityEngine.Object and value types.",
+  "keywords": [
+    "unity",
+    "editor",
+    "serializereference",
+    "polymorphism",
+    "inspector",
+    "dropdown"
+  ],
+  "author": {
+    "name": "@oPlayI",
+    "email": "2190055@gmail.com"
+  },
+  "dependencies": {
+    "com.unity.editorcoroutines": "1.0.0"
+  }
+}

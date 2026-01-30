@@ -1,0 +1,18 @@
+{
+    "name": "SR.Filter.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:60a9189e3f0df40b483c884cf5aef2ff"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

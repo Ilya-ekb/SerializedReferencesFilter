@@ -7,13 +7,26 @@ using UnityEngine;
 public sealed class TypeFilterDrawer : PropertyDrawer
 {
     private const float buttonWidth = 60f;
-    private const float spacing = 4f;
+    private const float spacing = 10f;
 
-    private static readonly GUIStyle _titleStyle =
-        new(EditorStyles.boldLabel) { wordWrap = false };
+    private static readonly GUIStyle _titleStyle = new(EditorStyles.label)
+    {
+        alignment = TextAnchor.MiddleLeft,
+        stretchWidth = true,
+    };
 
-    private static readonly GUIStyle _detailsStyle =
-        new(EditorStyles.label) { wordWrap = true, fontSize = 11 };
+    private static readonly GUIStyle _detailsStyle = new(EditorStyles.boldLabel)
+    {
+        alignment = TextAnchor.MiddleLeft,
+        clipping = TextClipping.Clip,
+        fontSize = 11,
+        stretchWidth = true,
+    };
+
+    private static readonly GUIStyle _foldoutStyle = new GUIStyle(EditorStyles.foldout)
+    {
+        fixedHeight = 30f
+    };
 
     private static readonly GUIContent _titleContent = new();
     private static readonly GUIContent _detailsContent = new();
@@ -46,21 +59,14 @@ public sealed class TypeFilterDrawer : PropertyDrawer
 
         BuildHeader(property, state, out var title, out var details);
 
-        float labelWidth =
-            position.width - (buttonWidth * 2 + spacing * 2);
+        float labelWidth = position.width - (buttonWidth * 2 + spacing * 2);
 
         _titleContent.text = title;
         _detailsContent.text = details;
 
         float titleHeight = _titleStyle.CalcHeight(_titleContent, labelWidth);
-        float detailsHeight =
-            string.IsNullOrEmpty(details)
-                ? 0f
-                : _detailsStyle.CalcHeight(_detailsContent, labelWidth);
-
-        float headerHeight =
-            titleHeight +
-            (detailsHeight > 0 ? spacing + detailsHeight : 0);
+        float detailsHeight = string.IsNullOrEmpty(details) ? 0f : _detailsStyle.CalcHeight(_detailsContent, labelWidth);
+        float headerHeight = titleHeight;
 
         DrawHeader(
             new Rect(position.x, position.y, position.width, headerHeight),
@@ -78,10 +84,27 @@ public sealed class TypeFilterDrawer : PropertyDrawer
                 position.y + headerHeight + spacing,
                 position.width,
                 position.height - headerHeight - spacing);
+            if (property.isExpanded)
+            {
+                EditorGUI.indentLevel++;
+                
+                var iterator = property.Copy();
+                var end = iterator.GetEndProperty();
+                iterator.NextVisible(true);
 
-            EditorGUI.indentLevel++;
-            EditorGUI.PropertyField(bodyRect, property, GUIContent.none, true);
-            EditorGUI.indentLevel--;
+                float y = bodyRect.y;
+
+                while (!SerializedProperty.EqualContents(iterator, end))
+                {
+                    float h = EditorGUI.GetPropertyHeight(iterator, true);
+                    var r = new Rect(bodyRect.x, y, bodyRect.width, h);
+                    EditorGUI.PropertyField(r, iterator, true);
+                    y += h + EditorGUIUtility.standardVerticalSpacing;
+                    iterator.NextVisible(false);
+                }
+
+                EditorGUI.indentLevel--;
+            }
         }
 
         EditorGUI.EndProperty();
@@ -99,30 +122,33 @@ public sealed class TypeFilterDrawer : PropertyDrawer
 
         BuildHeader(property, state, out var title, out var details);
 
-        float labelWidth =
-            EditorGUIUtility.currentViewWidth -
-            EditorGUIUtility.labelWidth -
-            (buttonWidth * 2 + spacing * 2);
+        float labelWidth = EditorGUIUtility.currentViewWidth - EditorGUIUtility.labelWidth - (buttonWidth * 2 + spacing * 2);
 
         _titleContent.text = title;
         _detailsContent.text = details;
 
         float titleHeight = _titleStyle.CalcHeight(_titleContent, labelWidth);
-        float detailsHeight =
-            string.IsNullOrEmpty(details)
-                ? 0f
-                : _detailsStyle.CalcHeight(_detailsContent, labelWidth);
+        float detailsHeight = string.IsNullOrEmpty(details) ? 0f : _detailsStyle.CalcHeight(_detailsContent, labelWidth);
 
-        float headerHeight =
-            titleHeight +
-            (detailsHeight > 0 ? spacing + detailsHeight : 0);
+        float headerHeight = titleHeight + 3;
 
         if (state != ReferenceState.Valid)
             return headerHeight;
+        if (!property.isExpanded)
+            return headerHeight;
 
-        return headerHeight +
-               spacing +
-               EditorGUI.GetPropertyHeight(property, label, true);
+        float childrenHeight = 0f;
+        var it = property.Copy();
+        var end = it.GetEndProperty();
+        it.NextVisible(true);
+
+        while (!SerializedProperty.EqualContents(it, end))
+        {
+            childrenHeight += EditorGUI.GetPropertyHeight(it, true) + EditorGUIUtility.standardVerticalSpacing;
+            it.NextVisible(false);
+        }
+
+        return headerHeight + spacing + childrenHeight;
     }
 
     // ================= helpers =================
@@ -192,14 +218,14 @@ public sealed class TypeFilterDrawer : PropertyDrawer
     {
         if (state == ReferenceState.Empty)
         {
-            title = property.displayName +  " None";
-            details = string.Empty;
+            title = "None";
+            details = property.displayName;
             return;
         }
 
         var type = property.managedReferenceValue.GetType();
-        title = property.displayName;
-        details = type.FullName;
+        title = type.FullName;
+        details = property.displayName;
     }
 
     private static void DrawHeader(
@@ -211,12 +237,22 @@ public sealed class TypeFilterDrawer : PropertyDrawer
         float detailsHeight,
         Type baseType)
     {
-        var titleRect = new Rect(rect.x, rect.y, labelWidth, titleHeight);
+        var foldoutRect = new Rect(rect.x, rect.y, 14f, titleHeight);
+        property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, GUIContent.none, true);
+
+        const float textPadding = 2f;
+
+        var titleRect = new Rect(
+            rect.x + 14f + textPadding,
+            rect.y,
+            labelWidth * 0.5f - 14f - textPadding,
+            titleHeight);
+
         var detailsRect = new Rect(
-            rect.x,
-            rect.y + titleHeight + spacing,
-            labelWidth,
-            detailsHeight);
+            rect.x + labelWidth * 0.5f + textPadding,
+            rect.y,
+            labelWidth * 0.5f - textPadding,
+            titleHeight);
 
         var changeRect = new Rect(
             rect.xMax - (buttonWidth * 2 + spacing),
@@ -235,12 +271,10 @@ public sealed class TypeFilterDrawer : PropertyDrawer
         if (state == ReferenceState.Empty)
             GUI.color = Color.yellow;
 
+        EditorGUI.LabelField(detailsRect, _detailsContent, _detailsStyle);
         EditorGUI.LabelField(titleRect, _titleContent, _titleStyle);
         GUI.color = prev;
-
-        if (detailsHeight > 0)
-            EditorGUI.LabelField(detailsRect, _detailsContent, _detailsStyle);
-
+        
         if (GUI.Button(changeRect, "Change"))
             SerializeReferenceAdvancedDropdown.Show(
                 changeRect,

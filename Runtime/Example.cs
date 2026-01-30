@@ -2,10 +2,10 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class Example : MonoBehaviour
+public class Example : MonoBehaviour, ITest
 {
     [SerializeReference, TypeFilter(typeof(ITest))]
-    public ITest[] TestsInt;
+    public ITest TestsInt;
 
     [SerializeReference, TypeFilter(typeof(ITest))]
     public object[] TestsObj;

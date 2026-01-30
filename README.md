@@ -47,7 +47,7 @@ This package:
 3. Enter:
 
 ```
-https://github.com/yourcompany/serialize-reference-typefilter.git
+[https://github.com/yourcompany/serialize-reference-typefilter.git](https://github.com/Ilya-ekb/SerializedReferencesFilter)
 ```
 
 ---
